@@ -2,6 +2,14 @@
 
 All notable public changes to AOCI-CODE will be documented in this file.
 
+## Unreleased
+
+- Toolchain: Go 1.26.10. govulncheck reported GO-2026-6809 (crypto/x509
+  trust in compromised intermediate certificates, reached through the status
+  page's HTTP server) against 1.26.9 from 2026-10-21 on; the nightly Full
+  gate was red on the released tree until the base toolchain moved. No
+  source, contract, or asset change.
+
 ## v0.1.0-rc21
 
 Eight user reports, four contributed pull requests, and a test-system
