@@ -61,7 +61,10 @@ func FuzzParse(f *testing.F) {
 		if doc == nil {
 			t.Fatal("Parse returned a nil Document")
 		}
-		normalized := strings.ReplaceAll(strings.TrimPrefix(text, "\ufeff"), "\r\n", "\n")
+		// Every leading BOM goes, not one: a doubled BOM is a concatenation
+		// artifact, and stripping one would leave RawText starting with the
+		// other, so Parse(RawText) could not be a fixed point (seed d03d5667d745b3ab).
+		normalized := strings.ReplaceAll(strings.TrimLeft(text, "\ufeff"), "\r\n", "\n")
 		if doc.RawText != normalized {
 			t.Fatalf("RawText is not the BOM-stripped LF text: %q", doc.RawText)
 		}

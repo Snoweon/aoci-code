@@ -155,7 +155,10 @@ func isLegacyTruncationOf(short, full string) bool {
 // 仅剥文首一枚 \ufeff —— 正文中出现的 BOM(拼接产物)属内容问题不在此层处置;
 // 消费点: Parse 入口 / ExtractHeader / ReplaceHeader(读侧宽进,写侧治愈)。
 func stripBOM(text string) string {
-	return strings.TrimPrefix(text, "\ufeff")
+	// 剥去文首连续的每一枚: 两个工具各加一枚的拼接产物仍在文首, 只剥一枚会让 RawText
+	// 以第二枚开头, 再解析一次就剥掉它, Parse(RawText) 不再是不动点(FuzzParse 种子
+	// d03d5667d745b3ab)。正文中间的 BOM 仍不在此层处置。
+	return strings.TrimLeft(text, "\ufeff")
 }
 
 // normalizeRootPath 仓库根/段路径归一: 反斜杠转正斜杠 + 去尾斜杠 + Windows 盘符大写
