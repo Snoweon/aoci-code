@@ -515,7 +515,10 @@ func handleMaintainWithVersion(
 					candidate.RTargetTokens, candidate.RMaxTokens = band.TargetTokens, band.MaxTokens
 				}
 				if band, found := cognitionbudget.LimitFor(policy.S, importance); found {
-					candidate.STargetTokens, candidate.SMaxTokens = band.TargetTokens, band.MaxTokens
+					// The S maximum told to the model is the hard limit Apply enforces: the
+					// band floored by the header's rune quota (#146).
+					candidate.STargetTokens = band.TargetTokens
+					candidate.SMaxTokens = cognitionbudget.SFieldMaxTokens(band, importance, index.ExtractSQuotaThresholds(repository.text))
 				}
 			}
 		}

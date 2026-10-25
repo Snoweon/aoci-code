@@ -20,6 +20,7 @@ import (
 	"github.com/aoci-spec/aoci-code/internal/dbcognition"
 	"github.com/aoci-spec/aoci-code/internal/dbevidence"
 	afs "github.com/aoci-spec/aoci-code/internal/fs"
+	"github.com/aoci-spec/aoci-code/internal/index"
 	"github.com/aoci-spec/aoci-code/internal/machinecontract"
 	"github.com/aoci-spec/aoci-code/internal/managedstate"
 )
@@ -845,6 +846,9 @@ func AssessProjectedBudget(cfg *config.Config, set *cognition.Set) BudgetFacts {
 	bytes := len(set.Root.Raw) + len(set.Meta.Raw)
 	violations := []cognitionbudget.Violation{}
 	coverage := cognitionbudget.NewSCoverageTally(policy.S)
+	// The S hard limit is the Meta's own rune quota, the same declaration the
+	// error-level rune gate applies when the projected set is parsed.
+	quota := index.ExtractSQuotaThresholds(string(set.Meta.Raw))
 	for _, id := range []string{cognition.ScopeCode, cognition.ScopeDatabase} {
 		asset := enabledAsset(set, id)
 		if asset == nil {
@@ -852,7 +856,7 @@ func AssessProjectedBudget(cfg *config.Config, set *cognition.Set) BudgetFacts {
 		}
 		bytes += len(asset.Raw)
 		for _, object := range asset.Objects {
-			for _, violation := range cognitionbudget.ValidateEntry(object.CanonicalLine, policy) {
+			for _, violation := range cognitionbudget.ValidateEntryWithSQuota(object.CanonicalLine, policy, quota) {
 				violation.Path = object.CanonicalRef
 				violations = append(violations, violation)
 			}

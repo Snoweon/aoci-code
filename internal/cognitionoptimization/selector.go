@@ -72,6 +72,9 @@ type Candidate struct {
 type SelectOptions struct {
 	ObjectRefs []string `json:"object_refs,omitempty"`
 	MaxEntries int      `json:"max_entries,omitempty"`
+	// SQuota is the Meta's S quota declaration; it floors the S maximum the
+	// model is told and never enters the checkpoint or the plan identity.
+	SQuota *index.SQuotaThresholds `json:"-"`
 }
 
 // Selection is one bounded model-review batch plus the stable ordered tail.
@@ -108,7 +111,7 @@ func Select(entries []AlignedEntry, policy cognitionbudget.Policy, options Selec
 	foundExplicit := make(map[string]bool, len(explicit))
 	candidates := make([]Candidate, 0, len(entries))
 	for position, current := range entries {
-		candidate, err := measureCandidate(current, normalized)
+		candidate, err := measureCandidate(current, normalized, options.SQuota)
 		if err != nil {
 			return Selection{}, fmt.Errorf("aligned entry %d: %w", position+1, err)
 		}
@@ -176,7 +179,7 @@ func Select(entries []AlignedEntry, policy cognitionbudget.Policy, options Selec
 	return Selection{TotalTargets: len(candidates), Batch: batch, RemainingObjectRefs: remaining}, nil
 }
 
-func measureCandidate(current AlignedEntry, policy cognitionbudget.Policy) (Candidate, error) {
+func measureCandidate(current AlignedEntry, policy cognitionbudget.Policy, quota *index.SQuotaThresholds) (Candidate, error) {
 	path, err := afs.NormalizeRelPath(current.Path)
 	if err != nil || path != current.Path || current.ObjectRef != "code:"+path {
 		return Candidate{}, fmt.Errorf("invalid Code object identity %q", current.ObjectRef)
@@ -204,10 +207,13 @@ func measureCandidate(current AlignedEntry, policy cognitionbudget.Policy) (Cand
 		STokens:     cognitionbudget.EstimateTokens([]byte(entry.S)),
 		TotalTokens: cognitionbudget.EstimateTokens([]byte(entry.FullLine)),
 	}
+	// The S maximum the model is told is the hard limit Apply enforces: the band
+	// floored by the Meta rune quota, never the bare band (#146).
+	sMaxTokens := cognitionbudget.SFieldMaxTokens(sBand, importance, quota)
 	rTargetOver := positiveDifference(cost.RTokens, rBand.TargetTokens)
 	sTargetOver := positiveDifference(cost.STokens, sBand.TargetTokens)
 	rMaxOver := positiveDifference(cost.RTokens, rBand.MaxTokens)
-	sMaxOver := positiveDifference(cost.STokens, sBand.MaxTokens)
+	sMaxOver := positiveDifference(cost.STokens, sMaxTokens)
 	return Candidate{
 		AlignedEntry:             current,
 		Importance:               importance,
@@ -215,11 +221,11 @@ func measureCandidate(current AlignedEntry, policy cognitionbudget.Policy) (Cand
 		RTargetTokens:            rBand.TargetTokens,
 		RMaxTokens:               rBand.MaxTokens,
 		STargetTokens:            sBand.TargetTokens,
-		SMaxTokens:               sBand.MaxTokens,
+		SMaxTokens:               sMaxTokens,
 		TargetOverageTokens:      rTargetOver + sTargetOver,
 		MaxOverageTokens:         rMaxOver + sMaxOver,
 		TargetPressureBasisPoint: pressureBasisPoints(cost.RTokens, rBand.TargetTokens) + pressureBasisPoints(cost.STokens, sBand.TargetTokens),
-		MaxPressureBasisPoint:    pressureBasisPoints(cost.RTokens, rBand.MaxTokens) + pressureBasisPoints(cost.STokens, sBand.MaxTokens),
+		MaxPressureBasisPoint:    pressureBasisPoints(cost.RTokens, rBand.MaxTokens) + pressureBasisPoints(cost.STokens, sMaxTokens),
 		SAbsentHighImportance:    (entry.S == "" || entry.S == "-") && importance >= machinecontract.HighImportanceMinC,
 		EScaleMismatchFact:       current.EScaleMismatch,
 	}, nil

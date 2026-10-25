@@ -9,6 +9,7 @@ import (
 	"github.com/aoci-spec/aoci-code/internal/baseline"
 	"github.com/aoci-spec/aoci-code/internal/cognitionbudget"
 	"github.com/aoci-spec/aoci-code/internal/config"
+	"github.com/aoci-spec/aoci-code/internal/index"
 	"github.com/aoci-spec/aoci-code/internal/machinecontract"
 	"github.com/aoci-spec/aoci-code/internal/managedscope"
 )
@@ -167,7 +168,7 @@ func TestMaintainCandidateCarriesScopeAndBudgetAuthoringContext(t *testing.T) {
 		candidate.WholeIndexTokens == 0 || candidate.ProjectedWholeIndexTokens != candidate.WholeIndexTokens ||
 		!candidate.ProjectionPending || candidate.RemainingTokens == 0 ||
 		candidate.RTargetTokens != rBand.TargetTokens || candidate.RMaxTokens != rBand.MaxTokens ||
-		candidate.STargetTokens != sBand.TargetTokens || candidate.SMaxTokens != sBand.MaxTokens ||
+		candidate.STargetTokens != sBand.TargetTokens || candidate.SMaxTokens != cognitionbudget.SFieldMaxTokens(sBand, 5, index.ExtractSQuotaThresholds(indexText)) ||
 		len(candidate.RFieldBands) != len(budget.R) || len(candidate.SFieldBands) != len(budget.S) {
 		t.Fatalf("authoring context incomplete: %+v", candidate)
 	}

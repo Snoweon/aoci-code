@@ -379,6 +379,19 @@ Judgement still applies in the other direction: a Whole-Index far above the
 ceiling is one a model cannot assimilate in a single delivery, so role reduction
 is the first answer and a raise is the second.
 
+### The S band and the S quota
+
+Two declarations describe how long an S may be: the Meta's `#S quota` line in
+runes, which the authoring contract quotes to the model, and the budget
+policy's per-C S band in tokens (UTF-8 bytes / 3). One CJK character is three
+bytes, so a band below the quota would refuse what the contract permitted: a
+C7 Entry at 80 of its declared 200 characters. The S hard limit is therefore
+the greater of the band maximum and the effective rune quota, exactly as the
+error-level rune gate resolves it. An S inside its declared quota is never
+`entry_field_budget_exceeded`, the `s_max_tokens` a candidate carries is that
+floored value, and the band only binds when a policy raises it above the
+quota. R has no rune quota and keeps its band.
+
 ### S coverage
 
 The budget report also measures how many Entries carry an S at all. `aoci

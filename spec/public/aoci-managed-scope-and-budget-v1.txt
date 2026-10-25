@@ -196,6 +196,13 @@ bands for R and S. Old projects without materialized policy use observe;
 new-project init materializes enforce. Project values are configurable and are
 not global constants.
 
+The S hard limit in tokens is the greater of the S band maximum and the
+effective S rune quota for that C (the Meta declaration floored by the machine
+default, exactly as the error-level rune gate resolves it). Tokens never exceed
+runes, so an S within its declared rune quota is never a budget violation, the
+S maximum reported to a model is that floored value, and the band binds only
+when a policy raises it above the quota. The R band stands alone.
+
 Reports measure Header, F, R, A, S, structure, total, largest Entries, largest
 R/S, and field violations. Only formal index-role cognition bytes count toward
 Whole-Index. A candidate is never truncated, summarized, retagged, or assigned

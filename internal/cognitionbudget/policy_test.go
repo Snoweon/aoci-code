@@ -17,7 +17,7 @@ func TestValidateEnforceRejectsWithoutRewriting(t *testing.T) {
 	policy.WholeIndex = WholeIndexPolicy{TargetTokens: 10, WarningTokens: 20, MaxTokens: 30}
 	policy.R = []FieldBand{{MinC: 1, MaxC: 9, TargetTokens: 2, MaxTokens: 3}}
 	policy.S = []FieldBand{{MinC: 1, MaxC: 9, TargetTokens: 2, MaxTokens: 3}}
-	raw := budgetFixture(strings.Repeat("relationship ", 12))
+	raw := budgetFixture(strings.Repeat("关系", 350))
 	validation, err := Validate("/repo", raw, policy)
 	if err != nil {
 		t.Fatal(err)
@@ -25,7 +25,7 @@ func TestValidateEnforceRejectsWithoutRewriting(t *testing.T) {
 	if validation.Allowed || len(validation.Violations) < 3 {
 		t.Fatalf("enforce mode allowed over-budget index: %+v", validation)
 	}
-	if string(raw) != string(budgetFixture(strings.Repeat("relationship ", 12))) {
+	if string(raw) != string(budgetFixture(strings.Repeat("关系", 350))) {
 		t.Fatal("validation changed model-authored bytes")
 	}
 }
@@ -62,7 +62,7 @@ func TestProjectedReportCarriesCompleteHardGateEvidence(t *testing.T) {
 	policy.R = []FieldBand{{MinC: 1, MaxC: 9, TargetTokens: 2, MaxTokens: 3}}
 	policy.S = []FieldBand{{MinC: 1, MaxC: 9, TargetTokens: 2, MaxTokens: 3}}
 	current := budgetFixture("short")
-	projected := budgetFixture(strings.Repeat("high entropy relationship ", 12))
+	projected := budgetFixture(strings.Repeat("高熵关系", 180))
 	report, err := ValidateProjected("/repo", current, projected, policy)
 	if err != nil {
 		t.Fatal(err)
@@ -73,7 +73,7 @@ func TestProjectedReportCarriesCompleteHardGateEvidence(t *testing.T) {
 		len(report.SuggestedCompression) == 0 || len(report.Violations) < 3 {
 		t.Fatalf("projected hard-gate evidence incomplete: %+v", report)
 	}
-	if string(projected) != string(budgetFixture(strings.Repeat("high entropy relationship ", 12))) {
+	if string(projected) != string(budgetFixture(strings.Repeat("高熵关系", 180))) {
 		t.Fatal("projection validation rewrote model-authored semantics")
 	}
 }

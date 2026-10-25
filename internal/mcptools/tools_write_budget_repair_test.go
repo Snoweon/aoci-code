@@ -7,6 +7,7 @@
 package mcptools
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -62,13 +63,36 @@ func activateEnforceBudget(t *testing.T, root string) {
 	}
 }
 
+// S 的硬上限是 Meta 的 rune 配额(#146): 210 个汉字 = 630 字节 = 210 tokens 超出
+// C9 档 200 tokens 的 band, 但在 600 rune 的配额之内 —— 作者化合同告诉模型的就是
+// 这个配额, token band 不得比它更紧, 这条 Entry 必须原样写入。
+func TestCJKSWithinRuneQuotaIsNotABudgetViolation(t *testing.T) {
+	root := buildSingleCodeWriteRepo(t, false)
+	activateEnforceBudget(t, root)
+	line := "main.go[CD9S]: F:run the fixture | R:- | A:main | S:" + strings.Repeat("约", 210)
+	result := decodeAutoResult(t, handleMCPUpdateBatch(root, "test-version", []updateEntryItemIn{{
+		Path: "main.go", SourceSHA256: sourceSHA256(t, root, "main.go"), NewEntry: line,
+	}}))
+	if result.Status != autoStatusApplied || result.Applied != 1 || len(result.Findings) != 0 {
+		t.Fatalf("配额内的中文 S 被 token band 拒绝: %#v", result)
+	}
+	if !strings.Contains(volumeFileText(t, root, "aoci.code.txt"), line) {
+		t.Fatal("写入后的 Code Volume 没有这条 Entry")
+	}
+}
+
 func TestBudgetEnforceViolationReturnsStructuredRepair(t *testing.T) {
 	root := buildSingleCodeWriteRepo(t, false)
 	activateEnforceBudget(t, root)
 	indexBefore := volumeFileText(t, root, "aoci.code.txt")
-	// C9 档 S 上限 200 tokens(600 字节); 210 个汉字 = 630 字节 = 210 tokens 超档,
-	// 但 210 runes 远低于 C9 的 600 rune 配额 —— 只有 token 预算这一层会拒绝。
-	line := "main.go[CD9S]: F:run the fixture | R:- | A:main | S:" + strings.Repeat("约", 210)
+	// C3 档 R 上限 50 tokens(150 字节); 8 个规范身份共 191 字节 = 63 tokens 超档,
+	// 但 8 项、191 runes 都在 FRAS v2 的 R 机器上限之内 —— 只有 token 预算这一层会拒绝。
+	refs := make([]string, 0, 8)
+	for position := 0; position < 8; position++ {
+		refs = append(refs, fmt.Sprintf("code:src/relation%02d.go", position))
+	}
+	relation := strings.Join(refs, ",")
+	line := "main.go[CD3S]: F:run the fixture | R:" + relation + " | A:main | S:-"
 	result := decodeAutoResult(t, handleMCPUpdateBatch(root, "test-version", []updateEntryItemIn{{
 		Path: "main.go", SourceSHA256: sourceSHA256(t, root, "main.go"), NewEntry: line,
 	}}))
@@ -79,9 +103,9 @@ func TestBudgetEnforceViolationReturnsStructuredRepair(t *testing.T) {
 		t.Fatalf("必须恰好一条定位 Finding: %#v", result.Findings)
 	}
 	finding := result.Findings[0]
-	if finding.RuleCode != "entry_field_budget_exceeded" || finding.Field != "S" ||
+	if finding.RuleCode != "entry_field_budget_exceeded" || finding.Field != "R" ||
 		finding.CandidateIndex != 1 || finding.CanonicalObjectIdentity != "code:main.go" ||
-		finding.Expected != "max_tokens=200" || finding.Actual != "actual_tokens=210" ||
+		finding.Expected != "max_tokens=50" || finding.Actual != fmt.Sprintf("actual_tokens=%d", len(relation)/3) ||
 		finding.Cause == "" || finding.SafeRepairAction == "" {
 		t.Fatalf("Finding 缺定位或精确 token 事实: %+v", finding)
 	}

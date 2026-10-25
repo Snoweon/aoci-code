@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aoci-spec/aoci-code/internal/index"
 	"github.com/aoci-spec/aoci-code/internal/machinecontract"
 )
 
@@ -224,5 +225,44 @@ func TestFormatSCoverageBandsLabelsSingleAndRangedBands(t *testing.T) {
 	}
 	if FormatSCoverageBands(nil) != "" {
 		t.Fatal("empty band list must render empty")
+	}
+}
+
+// The S hard limit is the Meta rune quota (#146): one CJK rune is three bytes
+// and therefore one token, so a band below the quota rejected what the
+// authoring contract permitted. The band is floored by the quota, a looser
+// declaration raises the floor, a band raised above the quota still binds,
+// and R keeps its band untouched.
+func TestSFieldHardLimitIsFlooredByTheRuneQuota(t *testing.T) {
+	policy := DefaultPolicy(machinecontract.BudgetModeEnforce)
+	entry := func(s string) string { return "a.go[CG9T]: F:f | R:- | A:- | S:" + s }
+	// 210 runes = 630 bytes = 210 tokens: over the C9 band (200), inside the quota (600).
+	if violations := ValidateEntry(entry(strings.Repeat("约", 210)), policy); len(violations) != 0 {
+		t.Fatalf("S within its rune quota must not be a budget violation: %+v", violations)
+	}
+	// 1000 ASCII runes = 333 tokens: over the band, over the quota in runes; the
+	// rune gate owns that refusal and the budget stays silent.
+	if violations := ValidateEntry(entry(strings.Repeat("s", 1000)), policy); len(violations) != 0 {
+		t.Fatalf("the budget must not duplicate the rune gate: %+v", violations)
+	}
+	// 700 CJK runes = 700 tokens: over the machine floor (600), inside a looser declaration (900).
+	wide := entry(strings.Repeat("约", 700))
+	quota := index.ExtractSQuotaThresholds("#S quota: C9-8≤900 C7-4≤200 C3-1≤50\n")
+	if violations := ValidateEntryWithSQuota(wide, policy, quota); len(violations) != 0 {
+		t.Fatalf("a looser Meta quota must raise the floor: %+v", violations)
+	}
+	if violations := ValidateEntry(wide, policy); len(violations) != 1 || violations[0].Field != "S" || violations[0].Maximum != 600 || violations[0].Actual != 700 {
+		t.Fatalf("beyond the machine floor the S limit is the floor itself: %+v", violations)
+	}
+	policy.S = []FieldBand{{MinC: 1, MaxC: 9, TargetTokens: 1000, MaxTokens: 1000}}
+	if violations := ValidateEntry(entry(strings.Repeat("约", 1001)), policy); len(violations) != 1 || violations[0].Maximum != 1000 {
+		t.Fatalf("a band above the quota keeps binding: %+v", violations)
+	}
+	relation := strings.TrimSuffix(strings.Repeat("code:src/r.go,", 60), ",")
+	if violations := ValidateEntry("a.go[CG9T]: F:f | R:"+relation+" | A:- | S:-", DefaultPolicy(machinecontract.BudgetModeEnforce)); len(violations) != 1 || violations[0].Field != "R" || violations[0].Maximum != 180 {
+		t.Fatalf("R keeps its band: %+v", violations)
+	}
+	if got := SFieldMaxTokens(FieldBand{MaxTokens: 80}, 7, nil); got != machinecontract.SQuotaMidRunes {
+		t.Fatalf("nil quota must floor at the machine default, got %d", got)
 	}
 }

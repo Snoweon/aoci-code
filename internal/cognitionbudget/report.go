@@ -186,7 +186,32 @@ func EstimateTokens(data []byte) int { return EstimateTokensOfSize(len(data)) }
 // has, so a caller summing several assets never has to restate the formula.
 func EstimateTokensOfSize(byteCount int) int { return byteCount / 3 }
 
+// SFieldMaxTokens is the S hard limit in tokens for one importance level. The
+// band never sits below the Meta S quota: the authoring contract states that
+// quota in runes, one CJK rune is three bytes and therefore one token, so a
+// band below the quota rejected Entries the contract permitted at ~40% of the
+// declared length (#146). Tokens never exceed runes, so an S within its rune
+// quota is never a budget violation; a policy that raises the band above the
+// quota keeps the band. quota may be nil: the machine default is the floor the
+// error-level rune gate applies anyway (index.LimitForC).
+func SFieldMaxTokens(band FieldBand, importance int, quota *index.SQuotaThresholds) int {
+	limit, _ := quota.LimitForC(importance)
+	if band.MaxTokens > limit {
+		return band.MaxTokens
+	}
+	return limit
+}
+
+// Build measures raw as one cognition asset. A Legacy index carries its S quota
+// declaration in the header it starts with; a Code Volume carries none, and the
+// Meta-declared quota reaches the S hard limit through BuildWithSQuota.
 func Build(repositoryRoot string, raw []byte, policy Policy) (*Report, error) {
+	return BuildWithSQuota(repositoryRoot, raw, policy, index.ExtractSQuotaThresholds(string(raw)))
+}
+
+// BuildWithSQuota is Build with the S quota declaration of the Meta or header
+// that governs raw, so the S hard limit is the same one the rune gate applies.
+func BuildWithSQuota(repositoryRoot string, raw []byte, policy Policy, quota *index.SQuotaThresholds) (*Report, error) {
 	normalized, err := Normalize(policy)
 	if err != nil {
 		return nil, err
@@ -227,8 +252,10 @@ func Build(repositoryRoot string, raw []byte, policy Policy) (*Report, error) {
 			if band, ok := LimitFor(normalized.R, importance); ok && cost.RTokens > band.MaxTokens {
 				report.Violations = append(report.Violations, Violation{Code: "entry_field_budget_exceeded", Path: cost.Path, Field: "R", Importance: importance, Actual: cost.RTokens, Maximum: band.MaxTokens})
 			}
-			if band, ok := LimitFor(normalized.S, importance); ok && cost.STokens > band.MaxTokens {
-				report.Violations = append(report.Violations, Violation{Code: "entry_field_budget_exceeded", Path: cost.Path, Field: "S", Importance: importance, Actual: cost.STokens, Maximum: band.MaxTokens})
+			if band, ok := LimitFor(normalized.S, importance); ok {
+				if limit := SFieldMaxTokens(band, importance, quota); cost.STokens > limit {
+					report.Violations = append(report.Violations, Violation{Code: "entry_field_budget_exceeded", Path: cost.Path, Field: "S", Importance: importance, Actual: cost.STokens, Maximum: limit})
+				}
 			}
 		}
 	}
@@ -359,7 +386,14 @@ func ValidateProjected(repositoryRoot string, current, projected []byte, policy 
 		SuggestedCompression: suggested, Violations: append([]Violation{}, projectedReport.Violations...)}, nil
 }
 
+// ValidateEntry checks one Entry line against the R band and the S hard limit
+// under the machine-default S quota; ValidateEntryWithSQuota takes the quota
+// the governing Meta or header declares.
 func ValidateEntry(line string, policy Policy) []Violation {
+	return ValidateEntryWithSQuota(line, policy, nil)
+}
+
+func ValidateEntryWithSQuota(line string, policy Policy, quota *index.SQuotaThresholds) []Violation {
 	normalized, err := Normalize(policy)
 	if err != nil {
 		return []Violation{{Code: "cognition_budget_policy_invalid"}}
@@ -375,8 +409,16 @@ func ValidateEntry(line string, policy Policy) []Violation {
 		bands       []FieldBand
 	}{{"R", entry.R, normalized.R}, {"S", entry.S, normalized.S}} {
 		actual := len([]byte(item.value)) / 3
-		if band, found := LimitFor(item.bands, importance); found && actual > band.MaxTokens {
-			result = append(result, Violation{Code: "entry_field_budget_exceeded", Field: item.name, Importance: importance, Actual: actual, Maximum: band.MaxTokens})
+		band, found := LimitFor(item.bands, importance)
+		if !found {
+			continue
+		}
+		limit := band.MaxTokens
+		if item.name == "S" {
+			limit = SFieldMaxTokens(band, importance, quota)
+		}
+		if actual > limit {
+			result = append(result, Violation{Code: "entry_field_budget_exceeded", Field: item.name, Importance: importance, Actual: actual, Maximum: limit})
 		}
 	}
 	return result

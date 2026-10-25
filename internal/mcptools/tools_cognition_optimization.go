@@ -229,6 +229,7 @@ func selectOptimizationTargets(root string, loaded *cognitionRepoCtx, objectRefs
 	}
 	return cognitionoptimization.Select(entries, loaded.cfg.EffectiveCognitionBudget(), cognitionoptimization.SelectOptions{
 		ObjectRefs: objectRefs, MaxEntries: codeBatchLimit(loaded.cfg),
+		SQuota: index.ExtractSQuotaThresholds(string(loaded.set.Meta.Raw)),
 	})
 }
 
