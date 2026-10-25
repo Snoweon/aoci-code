@@ -329,6 +329,14 @@ already on the surface. The array is advisory: it changes no state,
 next_action remains the machine decision, and a Host that ignores it loses
 nothing the CLI Guide does not already say.
 
+A blocked Maintain names its blocker in next_action. When
+orphan_remove_candidates is non-empty the value is
+explicit_orphan_remove_or_resolve_blocker; otherwise it is the first of
+close_pending_recovery, scan_to_establish_baseline, activate_scope_change,
+acknowledge_observed_evidence, and resolve_cognition_budget whose finding is
+present, and resolve_blocker when none is. A Host acting on the token alone
+never removes orphans that the result did not list.
+
 The existing aoci_update_entry tool accepts one complete current machine batch with
 multiple Code creates/updates, multiple Database creates/updates, or both in
 one already declared CognitionSet. Code uses path and current source SHA.

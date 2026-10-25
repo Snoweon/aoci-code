@@ -66,3 +66,37 @@ func TestNextCommandsCarryTheSharedSpellings(t *testing.T) {
 		t.Fatalf("evidence chain wrong: %v", evidence)
 	}
 }
+
+// A blocked Maintain names its actual blocker. The orphan token is kept for the
+// one case it was right about; a pending Observe review alone must not send a
+// Host hunting for orphans that do not exist (#147).
+func TestBlockedNextActionNamesTheActualBlocker(t *testing.T) {
+	observed := &volumegovernance.Facts{Findings: []volumegovernance.Finding{{Code: "observed_pending"}}}
+	if got := blockedNextAction(observed, nil); got != machinecontract.MaintainActionAcknowledgeObserved {
+		t.Fatalf("pending Observe review named %q", got)
+	}
+	if got := blockedNextAction(observed, []string{"code:gone.go"}); got != machinecontract.MaintainActionExplicitOrphanRemove {
+		t.Fatalf("an orphan must keep the orphan token, got %q", got)
+	}
+	for _, step := range []struct {
+		codes []string
+		want  string
+	}{
+		{[]string{"observed_pending", "recovery_pending"}, machinecontract.MaintainActionClosePendingRecovery},
+		{[]string{"cognition_budget_exceeded", "baseline_missing"}, machinecontract.MaintainActionScanToEstablishBaseline},
+		{[]string{"observed_pending", "scope_change_required"}, machinecontract.MaintainActionActivateScopeChange},
+		{[]string{"cognition_budget_exceeded"}, machinecontract.MaintainActionResolveCognitionBudget},
+		{[]string{"code_skipped"}, machinecontract.MaintainActionResolveBlocker},
+	} {
+		facts := &volumegovernance.Facts{}
+		for _, code := range step.codes {
+			facts.Findings = append(facts.Findings, volumegovernance.Finding{Code: code})
+		}
+		if got := blockedNextAction(facts, nil); got != step.want {
+			t.Fatalf("%v named %q, want %q", step.codes, got, step.want)
+		}
+	}
+	if got := blockedNextAction(nil, nil); got != machinecontract.MaintainActionResolveBlocker {
+		t.Fatalf("no facts must still answer a non-orphan token, got %q", got)
+	}
+}

@@ -12,6 +12,21 @@ const (
 // domain status projections so every ordinary Maintain route uses one token.
 const ActionCallNoArgumentMaintainForCurrentMachineBatch = "call_no_argument_aoci_maintain_for_current_machine_batch"
 
+// A blocked Volumes Maintain names the blocker the Host must clear in
+// next_action. Until v0.1.0-rc21 every blocked arm answered the orphan token,
+// so a Host acting on it tried to remove orphans that did not exist (#147).
+// The orphan spelling is kept for the case it was always right about; the
+// others follow the Guide stop vocabulary, highest precedence first.
+const (
+	MaintainActionExplicitOrphanRemove    = "explicit_orphan_remove_or_resolve_blocker"
+	MaintainActionClosePendingRecovery    = "close_pending_recovery"
+	MaintainActionScanToEstablishBaseline = "scan_to_establish_baseline"
+	MaintainActionActivateScopeChange     = "activate_scope_change"
+	MaintainActionAcknowledgeObserved     = "acknowledge_observed_evidence"
+	MaintainActionResolveCognitionBudget  = "resolve_cognition_budget"
+	MaintainActionResolveBlocker          = "resolve_blocker"
+)
+
 // Database Cognition values are the shared machine vocabulary for local
 // Evidence-to-FRAS authoring. They describe cognition state only; Database
 // Evidence Baseline drift remains a separate contract.

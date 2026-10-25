@@ -1398,7 +1398,7 @@ def group_n():
     cmds = m2.get("next_commands") or []
     ack = next((c for c in cmds if "scope acknowledge" in c), "")
     shaped = (m2.get("result") == "blocked"
-              and m2.get("next_action") == "explicit_orphan_remove_or_resolve_blocker"
+              and m2.get("next_action") == "acknowledge_observed_evidence"
               and ack != "" and "{agent}" in ack)
     record(g, "N2.blocked-carries-acknowledge-command", "PASS" if shaped else "FAIL",
            f"result={m2.get('result')} cmds={cmds}"[:200])

@@ -194,7 +194,8 @@ func handleVolumeMaintain(root, serviceVersion, requestedScope string, loaded *c
 		result.Status, result.Aligned = autoStatusStopped, false
 		result.NextCommands = evidenceNextCommands()
 	case facts.Result == volumegovernance.ResultBlocked || len(result.OrphanRemovals) > 0:
-		result.Status, result.Aligned, result.Result, result.NextAction = autoStatusStopped, false, volumegovernance.ResultBlocked, "explicit_orphan_remove_or_resolve_blocker"
+		result.Status, result.Aligned, result.Result = autoStatusStopped, false, volumegovernance.ResultBlocked
+		result.NextAction = blockedNextAction(facts, result.OrphanRemovals)
 		result.NextCommands = blockedNextCommands(facts)
 	case len(result.Candidates) > 0:
 		result.Status, result.Aligned, result.Result, result.NextAction = autoStatusRepairRequired, false, volumegovernance.ResultAuthoringRequired, result.Batch.NextAction
@@ -489,4 +490,33 @@ func fillVolumeCandidateScale(root string, thresholds *index.EScaleThresholds, c
 	}
 	candidate.FileLines = &lines
 	candidate.ExpectedE = index.ExpectedEScaleSymbols(lines, thresholds)
+}
+
+// blockedNextAction names the blocker a stopped Maintain wants cleared. The
+// orphan token is answered only when orphan_remove_candidates is non-empty;
+// every other blocked reason names itself in Guide-stop precedence, so a Host
+// that acts on next_action alone no longer tries to remove orphans that do not
+// exist when the only blocker is a pending Observe review (#147).
+func blockedNextAction(facts *volumegovernance.Facts, orphans []string) string {
+	if len(orphans) > 0 {
+		return machinecontract.MaintainActionExplicitOrphanRemove
+	}
+	codes := map[string]bool{}
+	if facts != nil {
+		for _, finding := range facts.Findings {
+			codes[finding.Code] = true
+		}
+	}
+	for _, step := range []struct{ code, action string }{
+		{"recovery_pending", machinecontract.MaintainActionClosePendingRecovery},
+		{"baseline_missing", machinecontract.MaintainActionScanToEstablishBaseline},
+		{"scope_change_required", machinecontract.MaintainActionActivateScopeChange},
+		{"observed_pending", machinecontract.MaintainActionAcknowledgeObserved},
+		{"cognition_budget_exceeded", machinecontract.MaintainActionResolveCognitionBudget},
+	} {
+		if codes[step.code] {
+			return step.action
+		}
+	}
+	return machinecontract.MaintainActionResolveBlocker
 }

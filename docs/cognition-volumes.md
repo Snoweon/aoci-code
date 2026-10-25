@@ -336,7 +336,12 @@ Guide prints, composed from one machine-owned source, and each is prefixed by
 the running server's own absolute executable path because the MCP binary need
 not be on `PATH`. Placeholders such as `{agent}` and `{tokens}` are the
 Host's to fill. The field is optional and advisory: `next_action` stays the
-machine decision.
+machine decision, and a blocked result names its blocker there:
+`explicit_orphan_remove_or_resolve_blocker` only when
+`orphan_remove_candidates` lists something, otherwise `close_pending_recovery`,
+`scan_to_establish_baseline`, `activate_scope_change`,
+`acknowledge_observed_evidence`, `resolve_cognition_budget`, or
+`resolve_blocker`, in that precedence.
 
 The current repair path closes an ownership-conflicting Entry,
 which is one of those governed orphans. Ordinary
