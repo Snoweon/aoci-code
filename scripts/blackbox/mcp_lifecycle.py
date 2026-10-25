@@ -730,10 +730,21 @@ def without_command_spans(text):
     return COMMAND_SPAN.sub(" ", text)
 
 
+# Host names are proper nouns the operator sees unchanged in every locale.
+# `doctor` prints the detected set as one bracketed list, so on a machine with
+# three hosts installed the run "claude codex qoder" reads as an English
+# sentence to EN_RUN and was flagged as a leak on developer machines while CI
+# runners, which detect none, passed. A fragment made only of host names is
+# runtime data, not a sentence.
+HOST_NAMES = {"claude", "codex", "cursor", "opencode", "qoder", "windsurf"}
+
+
 def en_sentence_fragments(text, machine_blob):
     out = set()
     for fragment in EN_RUN.findall(without_command_spans(text)):
         if not any(word[:1].islower() for word in fragment.split(" ")):
+            continue
+        if all(word.lower() in HOST_NAMES for word in fragment.split(" ")):
             continue
         if fragment in machine_blob:
             continue
