@@ -9,6 +9,41 @@ All notable public changes to AOCI-CODE will be documented in this file.
   page's HTTP server) against 1.26.9 from 2026-10-21 on; the nightly Full
   gate was red on the released tree until the base toolchain moved. No
   source, contract, or asset change.
+- The S hard limit is the Meta rune quota (#146). The per-C S token band is
+  floored by the effective rune quota, so an S within the quota the authoring
+  contract states is never `entry_field_budget_exceeded`; a CJK Entry at C7
+  was being refused at 80 of its declared 200 characters. The S maximum
+  reported in Maintain and optimization candidates is the floored value. R
+  bands are unchanged. Public contract: Managed Scope and Budget v1, section 8.
+- A blocked Volumes Maintain names its blocker in `next_action` (#147):
+  `explicit_orphan_remove_or_resolve_blocker` only when
+  `orphan_remove_candidates` lists something, otherwise
+  `close_pending_recovery`, `scan_to_establish_baseline`,
+  `activate_scope_change`, `acknowledge_observed_evidence`,
+  `resolve_cognition_budget`, or `resolve_blocker`. `next_commands` is
+  unchanged. Public contract: Cognition Volumes v1, next_commands section.
+- `scope acknowledge` retires an Observe fingerprint that an aligned policy
+  now excludes, instead of refusing the whole review set with
+  `observed_evidence_review_required` once another Observe path changes
+  (#137, reported in #134).
+- Volumes Maintain and `cognition_optimization` Code candidates carry
+  advisory `file_lines` and `expected_e`, counted and hashed from one byte
+  stream and emitted only when the digest equals the issued `source_sha256`
+  (#143, #142). Public contract: Cognition Volumes v1.
+- Hooks fail open on configuration errors: a truncated config or unsupported
+  locale no longer makes `aoci hook pretool` or `aoci hook codex-compact`
+  exit 3 before running, and pretool no longer migrates a legacy config
+  (#144). Public contract: CLI Runtime v1, hook configuration failures.
+- A `--repo` spelled through a symlinked component (`/tmp` on macOS) is the
+  same Git root as its resolved spelling (#145).
+- The optional model client classifies a non-2xx answer before reading its
+  body, and a timeout while reading a body is a timeout, not a network
+  failure (#139, #138).
+- `aoci ui --also <relative> --stop` and a second `--detach` find the page
+  registered under the absolute root (#140).
+- Managed manifests no longer build an unused standalone Safe Inventory
+  (#133, refs #127); one Windows-only test assertion decodes the Guide JSON
+  before searching it (#141).
 
 ## v0.1.0-rc21
 
