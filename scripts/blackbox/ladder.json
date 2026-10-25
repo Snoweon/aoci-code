@@ -13,9 +13,9 @@
     "make verify"
    ],
    "last_verified": {
-    "version": "v0.1.0-rc21",
-    "date": "2026-10-15",
-    "evidence": ".aoci/dev-tools/make-verify-phase1b.txt"
+    "version": "v0.1.0-rc22",
+    "date": "2026-10-25",
+    "evidence": ".aoci/dev-tools/make-verify-rc22.txt"
    }
   },
   {
@@ -31,9 +31,9 @@
     "make verify"
    ],
    "last_verified": {
-    "version": "v0.1.0-rc21",
-    "date": "2026-10-15",
-    "evidence": ".aoci/dev-tools/make-verify-phase1b.txt"
+    "version": "v0.1.0-rc22",
+    "date": "2026-10-25",
+    "evidence": ".aoci/dev-tools/make-verify-rc22.txt (tree 332fa42; lifecycle zh-CN false positive fixed in b9e637e, database lane needs Docker; re-run on the final tree recorded in LOG 2026-10-25)"
    }
   },
   {
@@ -50,9 +50,9 @@
     "make verify"
    ],
    "last_verified": {
-    "version": "v0.1.0-rc21",
-    "date": "2026-10-15",
-    "evidence": ".aoci/dev-tools/make-verify-phase1b.txt"
+    "version": "v0.1.0-rc22",
+    "date": "2026-10-25",
+    "evidence": ".aoci/dev-tools/make-verify-rc22.txt (53/53)"
    }
   },
   {
@@ -70,9 +70,9 @@
     "make verify"
    ],
    "last_verified": {
-    "version": "v0.1.0-rc21",
-    "date": "2026-10-15",
-    "evidence": ".aoci/dev-tools/make-verify-phase1b.txt"
+    "version": "v0.1.0-rc22",
+    "date": "2026-10-25",
+    "evidence": ".aoci/dev-tools/make-verify-rc22.txt (75 PASS)"
    }
   },
   {
@@ -87,9 +87,9 @@
     "make verify"
    ],
    "last_verified": {
-    "version": "v0.1.0-rc21",
-    "date": "2026-10-15",
-    "evidence": ".aoci/dev-tools/make-verify-phase1b.txt"
+    "version": "v0.1.0-rc22",
+    "date": "2026-10-25",
+    "evidence": ".aoci/dev-tools/lifecycle-core-rc22.txt (45 PASS, 2 CHAR, after b9e637e)"
    }
   },
   {
@@ -105,9 +105,9 @@
     "make verify"
    ],
    "last_verified": {
-    "version": "v0.1.0-rc21",
-    "date": "2026-10-15",
-    "evidence": ".aoci/dev-tools/make-verify-phase1b.txt"
+    "version": "v0.1.0-rc22",
+    "date": "2026-10-25",
+    "evidence": ".aoci/dev-tools/lifecycle-database-rc22.txt and lifecycle-database57-rc22.txt (mysql:8.4 and mysql:5.7)"
    }
   },
   {
@@ -151,9 +151,9 @@
     "full-confidence.yml"
    ],
    "last_verified": {
-    "version": "v0.1.0-rc20",
-    "date": "2026-10-13",
-    "evidence": "full-confidence 38294486403 (push, --recent 3: 240/240) and local 20-version run 1600/1600 on the axis branch"
+    "version": "v0.1.0-rc22",
+    "date": "2026-10-25",
+    "evidence": ".aoci/dev-tools/axis-rc22-recent3.txt (--recent 3)"
    }
   },
   {
@@ -169,9 +169,9 @@
     "release-rehearsal.yml"
    ],
    "last_verified": {
-    "version": "v0.1.0-rc21",
-    "date": "2026-10-15",
-    "evidence": ".aoci/dev-tools/make-verify-phase1b.txt"
+    "version": "v0.1.0-rc22",
+    "date": "2026-10-25",
+    "evidence": ".aoci/dev-tools/make-verify-rc22.txt (80/80)"
    }
   },
   {
@@ -184,9 +184,9 @@
    ],
    "runs_in": [],
    "last_verified": {
-    "version": "v0.1.0-rc21",
-    "date": "2026-10-15",
-    "evidence": ".aoci/dev-tools/realrepo-rc21.txt"
+    "version": "v0.1.0-rc22",
+    "date": "2026-10-25",
+    "evidence": ".aoci/dev-tools/realrepo-rc22.txt (RuoYi and excalidraw, label rc22)"
    }
   },
   {
@@ -217,9 +217,9 @@
     "full-confidence.yml"
    ],
    "last_verified": {
-    "version": "v0.1.0-rc20",
-    "date": "2026-10-13",
-    "evidence": "make fuzz-smoke FUZZTIME=10s on main 030638f: 11 targets, no crash"
+    "version": "v0.1.0-rc22",
+    "date": "2026-10-25",
+    "evidence": ".aoci/dev-tools/fuzz-smoke-rc22.txt (FuzzParse found the doubled-BOM input, fixed in 32f2298, FuzzParse re-run 45s clean; other targets clean)"
    }
   },
   {
@@ -232,9 +232,9 @@
     "full-confidence.yml"
    ],
    "last_verified": {
-    "version": "v0.1.0-rc20",
-    "date": "2026-10-13",
-    "evidence": "make coverage-floors on main after merge b800a16: 14 packages at or above floors"
+    "version": "v0.1.0-rc22",
+    "date": "2026-10-25",
+    "evidence": ".aoci/dev-tools/coverage-floors-rc22.txt"
    }
   },
   {
@@ -281,9 +281,9 @@
     "full-confidence.yml"
    ],
    "last_verified": {
-    "version": "v0.1.0-rc21",
-    "date": "2026-10-15",
-    "evidence": ".aoci/dev-tools/make-verify-phase1b.txt"
+    "version": "v0.1.0-rc22",
+    "date": "2026-10-25",
+    "evidence": ".aoci/dev-tools/make-verify-rc22.txt"
    }
   },
   {
@@ -314,9 +314,9 @@
     "ci.yml"
    ],
    "last_verified": {
-    "version": "v0.1.0-rc21",
-    "date": "2026-10-15",
-    "evidence": ".aoci/dev-tools/make-verify-phase1b.txt"
+    "version": "v0.1.0-rc22",
+    "date": "2026-10-25",
+    "evidence": ".aoci/dev-tools/make-verify-rc22.txt"
    }
   }
  ]

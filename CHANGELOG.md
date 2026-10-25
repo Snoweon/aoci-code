@@ -2,7 +2,15 @@
 
 All notable public changes to AOCI-CODE will be documented in this file.
 
-## Unreleased
+## v0.1.0-rc22
+
+The rc21 soak's findings and nine contributed fixes: the S hard limit is the
+Meta rune quota, a blocked Maintain names its blocker, `scope acknowledge`
+retires an excluded Observe fingerprint, Maintain candidates carry source-bound
+scale evidence, hooks fail open on configuration errors, a symlinked `--repo`
+is its own Git root, and the base toolchain moves to Go 1.26.10. No MCP tool
+name, input schema, or formal-asset format changes; two additive candidate
+fields and one wider `next_action` vocabulary.
 
 - Toolchain: Go 1.26.10. govulncheck reported GO-2026-6809 (crypto/x509
   trust in compromised intermediate certificates, reached through the status
@@ -41,6 +49,9 @@ All notable public changes to AOCI-CODE will be documented in this file.
   failure (#139, #138).
 - `aoci ui --also <relative> --stop` and a second `--detach` find the page
   registered under the absolute root (#140).
+- The index parser strips every leading UTF-8 BOM, not one: a doubled BOM
+  left `RawText` starting with the second, so a Document re-parsed from its
+  own `RawText` changed (found by `make fuzz-smoke`; the input is a seed).
 - Managed manifests no longer build an unused standalone Safe Inventory
   (#133, refs #127); one Windows-only test assertion decodes the Guide JSON
   before searching it (#141).
