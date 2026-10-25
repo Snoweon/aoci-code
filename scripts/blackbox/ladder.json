@@ -33,7 +33,7 @@
    "last_verified": {
     "version": "v0.1.0-rc22",
     "date": "2026-10-25",
-    "evidence": ".aoci/dev-tools/make-verify-rc22.txt (tree 332fa42; lifecycle zh-CN false positive fixed in b9e637e, database lane needs Docker; re-run on the final tree recorded in LOG 2026-10-25)"
+    "evidence": ".aoci/dev-tools/make-verify-rc22-final.txt (candidate tree 231db0e: all gates, conformance 53/53, scenarios 75, lifecycle 87 PASS incl. database, axis-self 80/80; first run on 332fa42 in make-verify-rc22.txt)"
    }
   },
   {
@@ -247,9 +247,9 @@
     "full-confidence.yml"
    ],
    "last_verified": {
-    "version": "v0.1.0-rc20",
-    "date": "2026-10-13",
-    "evidence": "make longrun-refresh on main: overall_passed=true (threshold 29/30 and compaction experiments)"
+    "version": "v0.1.0-rc22",
+    "date": "2026-10-25",
+    "evidence": ".aoci/dev-tools/longrun-refresh-rc22.txt (overall_passed=true)"
    }
   },
   {
